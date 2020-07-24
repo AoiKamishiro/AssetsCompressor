@@ -1,5 +1,6 @@
 # AssetsCompressor
 <H2><a href="https://github.com/AoiKamishiro/UnityCustomEditor_AssetsCompressor/releases">最新版のダウンロードはこちら</a></H2>
+<H3>※更新の際は以前のバージョンを削除してからインポートしてください。</H3>
 <H3>プログラムについて</H3>
 <a>個々にやると面倒な圧縮の設定を、一括して行う事ができます。</a>
 <H4>・できること</H4>
