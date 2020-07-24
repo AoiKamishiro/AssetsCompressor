@@ -39,6 +39,7 @@
 <li>CompressionFormat … 圧縮方式を変更します。Vorbisが一番抑えられると思います。</li>
 <li>Qaulity … 圧縮後の品質を設定します。下げすぎると高音などがカットされます。</li>
 <li>SampleRateSetting … サンプリングレートの設定を変更します。元ファイル、自動、手動から選択できます。</li>
+</ul>
 <H3>連絡先</H3>
 <a>Twitter : @aoi3192</a>
 <br/>
