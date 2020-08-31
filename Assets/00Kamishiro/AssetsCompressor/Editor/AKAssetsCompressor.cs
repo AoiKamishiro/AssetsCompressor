@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Zlib License
  *  
  *  Copyright (c) 2020 AoiKamishiro/神城葵
@@ -35,14 +35,15 @@ using UnityEngine;
 public class AKAssetsCompressor : EditorWindow
 {
     [MenuItem("Tools/Kamishiro/AssetsCompressor", priority = 150)]
-    private static void Create()
+    private static void OnEnable()
     {
         AKAssetsCompressor window = GetWindow<AKAssetsCompressor>("AssetsCompressor");
         window.minSize = new Vector2(320, 360);
+        window.Show();
     }
 
     //GUI Component
-    private const string version = "AssetCompresser V1.2 by 神城葵";
+    private const string version = "AssetCompresser V1.3 by 神城葵";
     private const string linktext = "操作説明等はこちら";
     private const string link = "https://github.com/AoiKamishiro/UnityCustomEditor_AssetsCompressor";
     private int toolberSelection = 0;
@@ -56,6 +57,7 @@ public class AKAssetsCompressor : EditorWindow
     private bool texture_EditClunchCompression = true;
     private bool texture_ShowOPDefault = false;
     private bool texture_ShowOPNoralmap = false;
+    private bool texture_ShowOPUISprite = false;
 
     private Vector2 model_ScrollPosition = Vector2.zero;
     private bool model_ShowOPDirectory = true;
@@ -120,8 +122,10 @@ public class AKAssetsCompressor : EditorWindow
     }
     private MAXSIZE defaultMaxsize = MAXSIZE.MaxSize2048x2048;
     private MAXSIZE normalMaxsize = MAXSIZE.MaxSize1024x1024;
+    private MAXSIZE spriteMaxsize = MAXSIZE.MaxSize256x256;
     private int defaultMaxsizeInt = 2048;
     private int normalMaxsizeInt = 1024;
+    private int spriteMaxsizeInt = 256;
 
     //Models Enums
     private enum COMPRESS
@@ -269,6 +273,13 @@ public class AKAssetsCompressor : EditorWindow
                     useNormalmapOp = EditorGUILayout.ToggleLeft("MaxSizeを一段階下げる", useNormalmapOp);
                     EditorGUI.indentLevel--;
                 }
+                texture_ShowOPUISprite = EditorGUILayout.Foldout(texture_ShowOPUISprite, "Sprite Texture");
+                if (texture_ShowOPUISprite)
+                {
+                    EditorGUI.indentLevel++;
+                    spriteMaxsize = (MAXSIZE)EditorGUILayout.EnumPopup("MaxSizeの最大値", spriteMaxsize);
+                    EditorGUI.indentLevel--;
+                }
                 EditorGUI.indentLevel--;
                 EditorGUILayout.EndToggleGroup();
                 EditorGUILayout.Space();
@@ -408,6 +419,7 @@ public class AKAssetsCompressor : EditorWindow
         int editedFilesCount = 0;
         defaultMaxsizeInt = ConvertTextMaxsizeEnum(defaultMaxsize);
         normalMaxsizeInt = ConvertTextMaxsizeEnum(normalMaxsize);
+        spriteMaxsizeInt = ConvertTextMaxsizeEnum(spriteMaxsize);
 
         string[] files = new string[] { };
         for (int i = 0; i < texture_Directories.Length; i++)
@@ -452,7 +464,7 @@ public class AKAssetsCompressor : EditorWindow
 
             TextureImporter Ti = AssetImporter.GetAtPath(files[i]) as TextureImporter;
             if (Ti.textureShape != TextureImporterShape.Texture2D) { continue; }
-            if (Ti.textureType != TextureImporterType.Default && Ti.textureType != TextureImporterType.NormalMap) { continue; }
+            if (Ti.textureType != TextureImporterType.Default && Ti.textureType != TextureImporterType.NormalMap && Ti.textureType!=TextureImporterType.Sprite) { continue; }
             if (skipcompresion && Ti.crunchedCompression == true) { continue; }
 
             if (UseMaxsizeAdjuster)
@@ -472,6 +484,15 @@ public class AKAssetsCompressor : EditorWindow
                 {
                     if (useNormalmapOp) { compressedTextureSize = AdjustTextureMaxsizeInStage(originalTextureSize, 1); }
                     if (compressedTextureSize > normalMaxsizeInt) { compressedTextureSize = normalMaxsizeInt; }
+                    if (Ti.maxTextureSize != compressedTextureSize)
+                    {
+                        Ti.maxTextureSize = compressedTextureSize;
+                        maxSizeChanged = true;
+                    }
+                }
+                if (Ti.textureType == TextureImporterType.Sprite)
+                {
+                    if (compressedTextureSize > spriteMaxsizeInt) { compressedTextureSize = spriteMaxsizeInt; }
                     if (Ti.maxTextureSize != compressedTextureSize)
                     {
                         Ti.maxTextureSize = compressedTextureSize;
@@ -676,7 +697,6 @@ public class AKAssetsCompressor : EditorWindow
         }
         return files;
     }
-
     private string[] GetRootAssetsListByExt(string ext)
     {
         string[] files = Directory.GetFiles(Application.dataPath, "*" + ext, SearchOption.TopDirectoryOnly); for (int i = 0; i < files.Length; i++)
