@@ -63,3 +63,4 @@ crashlytics-build.properties
 /[Pp]ackages/
 /[Aa]ssets/*
 !/[Aa]ssets/00Kamishiro
+.vscode/
