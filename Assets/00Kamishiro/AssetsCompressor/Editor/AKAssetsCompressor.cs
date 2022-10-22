@@ -212,6 +212,7 @@ public class AKAssetsCompressor : EditorWindow
                 if (texture_ShowOPDirectory)
                 {
                     EditorGUI.indentLevel++;
+                    if (GUILayout.Button("全部にチェックを入れる")) { CheckOn_AllFolders(); }
                     for (int i = 0; i < texture_Directories.Length; i++)
                     {
                         string dirname = i == 0 ? "./" : "./" + Path.GetFileName(texture_Directories[i]);
@@ -410,6 +411,15 @@ public class AKAssetsCompressor : EditorWindow
             }
         }
     }
+
+    private void CheckOn_AllFolders()
+    {
+        for (int i = 0; i < texture_DirectoriesBool.Length; i++)
+        {
+            texture_DirectoriesBool[i] = true;
+        }
+    }
+
     private void OpenLink(string link)
     {
         Application.OpenURL(link);
