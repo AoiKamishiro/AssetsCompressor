@@ -22,6 +22,7 @@
 <ul>
 <li>既にCrunchCompression済みのテクスチャをスキップ … 手動で圧縮設定を施したファイルを上書きしないようにする設定です。</li>
 <li>StreamingMipMaps … VRChatでアバターをアップロードする際に要求されるものです。</li>
+<li>Compression … 圧縮品質と思われます。</li>
 <li>CrunchCompression … 画像をほぼ劣化させずにファイルサイズを大きく抑える事ができるようになります。</li>
 <li>Maxsize … 画質と引き換えにファイルサイズを小さくします。
 </ul>
@@ -40,7 +41,3 @@
 <li>Qaulity … 圧縮後の品質を設定します。下げすぎると高音などがカットされます。</li>
 <li>SampleRateSetting … サンプリングレートの設定を変更します。元ファイル、自動、手動から選択できます。</li>
 </ul>
-<H3>連絡先</H3>
-<a>Twitter : @aoi3192</a>
-<br/>
-<a>VRC : 神城 葵[Aoi_JPN]</a>
