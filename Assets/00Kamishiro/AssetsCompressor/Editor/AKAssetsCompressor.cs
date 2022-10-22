@@ -54,6 +54,7 @@ public class AKAssetsCompressor : EditorWindow
     private string[] texture_Directories = new string[] { };
     private bool[] texture_DirectoriesBool = new bool[] { };
     private bool texture_EditStreaminMipMap = true;
+    private bool texture_EditTextureCompressionQuality = false;
     private bool texture_EditClunchCompression = true;
     private bool texture_ShowOPDefault = false;
     private bool texture_ShowOPNoralmap = false;
@@ -79,6 +80,7 @@ public class AKAssetsCompressor : EditorWindow
     //Default Settings
     private bool skipcompresion = true;
     private bool useStreamingMipMap = true;
+    private int textureCompressionQuality = 0;
     private bool useCrunchCompression = true;
     private int compressionQaulity = 100;
     private bool UseMaxsizeAdjuster = true;
@@ -126,6 +128,14 @@ public class AKAssetsCompressor : EditorWindow
     private int defaultMaxsizeInt = 2048;
     private int normalMaxsizeInt = 1024;
     private int spriteMaxsizeInt = 256;
+
+    private static GUIContent[] TEXTURE_COMPRESSION_QUALITY_OPTIONS =
+    {
+        new GUIContent("None"),
+        new GUIContent("Low Quality"),
+        new GUIContent("Normal Quality"),
+        new GUIContent("High Quality")
+    };
 
     //Models Enums
     private enum COMPRESS
@@ -240,6 +250,13 @@ public class AKAssetsCompressor : EditorWindow
                 texture_EditStreaminMipMap = EditorGUILayout.BeginToggleGroup("Mip Maps の設定を変更する", texture_EditStreaminMipMap);
                 EditorGUI.indentLevel++;
                 useStreamingMipMap = EditorGUILayout.ToggleLeft("Streaming Mip Maps", useStreamingMipMap);
+                EditorGUI.indentLevel--;
+                EditorGUILayout.EndToggleGroup();
+
+                //Edit Compression Setting
+                texture_EditTextureCompressionQuality = EditorGUILayout.BeginToggleGroup("Compression の設定を変更する", texture_EditTextureCompressionQuality);
+                EditorGUI.indentLevel++;
+                textureCompressionQuality = EditorGUILayout.Popup(textureCompressionQuality, TEXTURE_COMPRESSION_QUALITY_OPTIONS);
                 EditorGUI.indentLevel--;
                 EditorGUILayout.EndToggleGroup();
 
@@ -417,6 +434,7 @@ public class AKAssetsCompressor : EditorWindow
     private void BatchProcess_Texture()
     {
         int editedFilesCount = 0;
+        TextureImporterCompression tic = ConvertTextureImporterCompressionEnum();
         defaultMaxsizeInt = ConvertTextMaxsizeEnum(defaultMaxsize);
         normalMaxsizeInt = ConvertTextMaxsizeEnum(normalMaxsize);
         spriteMaxsizeInt = ConvertTextMaxsizeEnum(spriteMaxsize);
@@ -507,6 +525,10 @@ public class AKAssetsCompressor : EditorWindow
                     Ti.streamingMipmaps = useStreamingMipMap;
                     streamingMipMapChanged = true;
                 }
+            }
+            if (texture_EditTextureCompressionQuality)
+            {
+                Ti.textureCompression = tic;
             }
             if (texture_EditClunchCompression)
             {
@@ -866,5 +888,31 @@ public class AKAssetsCompressor : EditorWindow
     private void NoFiles()
     {
         _ = EditorUtility.DisplayDialog("No Files.", "条件を満たすファイルが存在しませんでした。", "閉じる");
+    }
+
+    private TextureImporterCompression ConvertTextureImporterCompressionEnum()
+    {
+        TextureImporterCompression result = TextureImporterCompression.Compressed;
+
+        switch (this.textureCompressionQuality)
+        {
+            case 0:
+                result = TextureImporterCompression.Uncompressed;
+                break;
+            case 1:
+                result = TextureImporterCompression.CompressedLQ;
+                break;
+            case 2:
+                result = TextureImporterCompression.Compressed;
+                break;
+            case 3:
+                result = TextureImporterCompression.CompressedHQ;
+                break;
+
+            default:
+                break;
+        }
+
+        return result;
     }
 }
