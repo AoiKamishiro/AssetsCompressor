@@ -56,9 +56,9 @@ public class AKAssetsCompressor : EditorWindow
     private bool texture_EditStreaminMipMap = true;
     private bool texture_EditTextureCompressionQuality = false;
     private bool texture_EditClunchCompression = true;
-    private bool texture_ShowOPDefault = false;
-    private bool texture_ShowOPNoralmap = false;
-    private bool texture_ShowOPUISprite = false;
+    private bool texture_ShowOPDefault = true;
+    private bool texture_ShowOPNoralmap = true;
+    private bool texture_ShowOPUISprite = true;
 
     private Vector2 model_ScrollPosition = Vector2.zero;
     private bool model_ShowOPDirectory = true;
