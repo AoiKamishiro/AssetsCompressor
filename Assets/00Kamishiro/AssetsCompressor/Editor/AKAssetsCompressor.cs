@@ -84,7 +84,7 @@ public class AKAssetsCompressor : EditorWindow
     private bool useCrunchCompression = true;
     private int compressionQaulity = 100;
     private bool UseMaxsizeAdjuster = true;
-    private bool useNormalmapOp = true;
+    private bool useNormalmapOp = false;
 
     private bool importCameras = false;
     private bool importLights = false;
