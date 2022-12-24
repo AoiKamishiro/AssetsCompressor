@@ -78,7 +78,7 @@ public class AKAssetsCompressor : EditorWindow
     private bool audio_EditCompression = true;
 
     //Default Settings
-    private bool skipcompresion = true;
+    private bool skipcompresion = false;
     private bool useStreamingMipMap = true;
     private int textureCompressionQuality = 0;
     private bool useCrunchCompression = true;
