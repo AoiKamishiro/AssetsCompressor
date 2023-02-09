@@ -78,13 +78,13 @@ public class AKAssetsCompressor : EditorWindow
     private bool audio_EditCompression = true;
 
     //Default Settings
-    private bool skipcompresion = false;
+    private bool skipcompresion = true;
     private bool useStreamingMipMap = true;
     private int textureCompressionQuality = 0;
     private bool useCrunchCompression = true;
     private int compressionQaulity = 100;
     private bool UseMaxsizeAdjuster = true;
-    private bool useNormalmapOp = false;
+    private bool useNormalmapOp = true;
 
     private bool importCameras = false;
     private bool importLights = false;
@@ -214,6 +214,11 @@ public class AKAssetsCompressor : EditorWindow
                 texture_ScrollPosition = EditorGUILayout.BeginScrollView(texture_ScrollPosition);
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Texture インポート設定", EditorStyles.boldLabel);
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Low Quality")) { SetLowQuality();  }
+                if (GUILayout.Button("High Quality")) { SetHighQuality(); }
+                EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.Space();
                 skipcompresion = EditorGUILayout.ToggleLeft("既にCrunchCompression済みのファイルはスキップ", skipcompresion);
@@ -924,5 +929,39 @@ public class AKAssetsCompressor : EditorWindow
         }
 
         return result;
+    }
+
+    private void SetLowQuality()
+    {
+        this.texture_EditStreaminMipMap = true;
+        this.texture_EditTextureCompressionQuality = true;
+        this.texture_EditClunchCompression = true;
+        this.skipcompresion = false;
+        this.useStreamingMipMap = true;
+        this.textureCompressionQuality = 1;
+        this.useCrunchCompression = true;
+        this.compressionQaulity = 50;
+        this.UseMaxsizeAdjuster = true;
+        this.useNormalmapOp = true;
+        this.defaultMaxsize = MAXSIZE.MaxSize2048x2048;
+        this.normalMaxsize = MAXSIZE.MaxSize1024x1024;
+        this.spriteMaxsize = MAXSIZE.MaxSize256x256;
+}
+
+    private void SetHighQuality()
+    {
+        this.texture_EditStreaminMipMap = true;
+        this.texture_EditTextureCompressionQuality = true;
+        this.texture_EditClunchCompression = true;
+        this.skipcompresion = false;
+        this.useStreamingMipMap = true;
+        this.textureCompressionQuality = 3;
+        this.useCrunchCompression = true;
+        this.compressionQaulity = 100;
+        this.UseMaxsizeAdjuster = true;
+        this.useNormalmapOp = false;
+        this.defaultMaxsize = MAXSIZE.MaxSize8192x8192;
+        this.normalMaxsize = MAXSIZE.MaxSize8192x8192;
+        this.spriteMaxsize = MAXSIZE.MaxSize8192x8192;
     }
 }
