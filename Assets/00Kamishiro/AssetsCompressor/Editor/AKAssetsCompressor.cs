@@ -938,7 +938,7 @@ public class AKAssetsCompressor : EditorWindow
         this.texture_EditClunchCompression = true;
         this.skipcompresion = false;
         this.useStreamingMipMap = true;
-        this.textureCompressionQuality = 1;
+        this.textureCompressionQuality = 2;
         this.useCrunchCompression = true;
         this.compressionQaulity = 50;
         this.UseMaxsizeAdjuster = true;
