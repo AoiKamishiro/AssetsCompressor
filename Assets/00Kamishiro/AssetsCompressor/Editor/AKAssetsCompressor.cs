@@ -939,8 +939,7 @@ public class AKAssetsCompressor : EditorWindow
         this.skipcompresion = false;
         this.useStreamingMipMap = true;
         this.textureCompressionQuality = 2;
-        this.useCrunchCompression = true;
-        this.compressionQaulity = 50;
+        this.useCrunchCompression = false;
         this.UseMaxsizeAdjuster = true;
         this.useNormalmapOp = true;
         this.defaultMaxsize = MAXSIZE.MaxSize2048x2048;
@@ -955,9 +954,8 @@ public class AKAssetsCompressor : EditorWindow
         this.texture_EditClunchCompression = true;
         this.skipcompresion = false;
         this.useStreamingMipMap = true;
-        this.textureCompressionQuality = 3;
-        this.useCrunchCompression = true;
-        this.compressionQaulity = 100;
+        this.textureCompressionQuality = 0;
+        this.useCrunchCompression = false;
         this.UseMaxsizeAdjuster = true;
         this.useNormalmapOp = false;
         this.defaultMaxsize = MAXSIZE.MaxSize8192x8192;
