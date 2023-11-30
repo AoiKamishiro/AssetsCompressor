@@ -960,6 +960,6 @@ public class AKAssetsCompressor : EditorWindow
         this.useNormalmapOp = false;
         this.defaultMaxsize = MAXSIZE.MaxSize8192x8192;
         this.normalMaxsize = MAXSIZE.MaxSize8192x8192;
-        this.spriteMaxsize = MAXSIZE.MaxSize8192x8192;
+        this.spriteMaxsize = MAXSIZE.MaxSize32x32;
     }
 }
