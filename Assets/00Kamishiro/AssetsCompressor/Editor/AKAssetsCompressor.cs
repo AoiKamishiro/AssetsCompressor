@@ -1,7 +1,7 @@
 /*
  *  Zlib License
  *  
- *  Copyright (c) 2020 AoiKamishiro/神城葵
+ *  Copyright (c) 2024 AoiKamishiro/神城葵
  *  
  *  
  *  This software is provided 'as-is', without any express or implied warranty.
@@ -23,7 +23,7 @@
  *     
  */
 
-//LastUpdate:2020/07/24(JST) 
+//LastUpdate:2024/04/20(JST) 
 
 using System;
 using System.IO;
@@ -87,7 +87,6 @@ public class AKAssetsCompressor : EditorWindow
     private bool importCameras = false;
     private bool importLights = false;
     private bool readWriteEnabled = true;
-    private bool optimizeMesh = true;
     private bool generateLightmapUVs = true;
 
     private bool forceToMono = true;
@@ -136,6 +135,7 @@ public class AKAssetsCompressor : EditorWindow
         Heigh = 3
     }
     private COMPRESS compression = COMPRESS.Low;
+    private MeshOptimizationFlags optimizationFlags = 0;
 
     //Audios Enums
     private enum FORMAT
@@ -331,7 +331,7 @@ public class AKAssetsCompressor : EditorWindow
                 EditorGUI.indentLevel++;
                 compression = (COMPRESS)EditorGUILayout.EnumPopup("Mesh Compression", compression);
                 readWriteEnabled = EditorGUILayout.ToggleLeft("Read/Write Enabled", readWriteEnabled);
-                optimizeMesh = EditorGUILayout.ToggleLeft("Optimize Mesh", optimizeMesh);
+                optimizationFlags = (MeshOptimizationFlags)EditorGUILayout.EnumPopup("Optimize Mesh", optimizationFlags);
                 //generateColliders = EditorGUILayout.ToggleLeft("Generate Colliders", generateColliders);
                 EditorGUI.indentLevel--;
                 EditorGUILayout.EndToggleGroup();
@@ -464,7 +464,7 @@ public class AKAssetsCompressor : EditorWindow
 
             TextureImporter Ti = AssetImporter.GetAtPath(files[i]) as TextureImporter;
             if (Ti.textureShape != TextureImporterShape.Texture2D) { continue; }
-            if (Ti.textureType != TextureImporterType.Default && Ti.textureType != TextureImporterType.NormalMap && Ti.textureType!=TextureImporterType.Sprite) { continue; }
+            if (Ti.textureType != TextureImporterType.Default && Ti.textureType != TextureImporterType.NormalMap && Ti.textureType != TextureImporterType.Sprite) { continue; }
             if (skipcompresion && Ti.crunchedCompression == true) { continue; }
 
             if (UseMaxsizeAdjuster)
@@ -594,9 +594,15 @@ public class AKAssetsCompressor : EditorWindow
                     Mi.isReadable = readWriteEnabled;
                     meshesSettingChanged = true;
                 }
-                if (Mi.optimizeMesh != optimizeMesh)
+                if (Mi.optimizeMeshPolygons == ((optimizationFlags & MeshOptimizationFlags.PolygonOrder) != 0))
                 {
-                    Mi.optimizeMesh = optimizeMesh;
+                    Mi.optimizeMeshPolygons = (optimizationFlags & MeshOptimizationFlags.PolygonOrder) != 0;
+                    meshesSettingChanged = true;
+                }
+
+                if (Mi.optimizeMeshVertices == ((optimizationFlags & MeshOptimizationFlags.VertexOrder) != 0))
+                {
+                    Mi.optimizeMeshVertices = (optimizationFlags & MeshOptimizationFlags.VertexOrder) != 0;
                     meshesSettingChanged = true;
                 }
             }
@@ -663,7 +669,7 @@ public class AKAssetsCompressor : EditorWindow
             }
             if (audio_EditCompression)
             {
-                AudioImporterSampleSettings Ais = new AudioImporterSampleSettings
+                AudioImporterSampleSettings Ais = new()
                 {
                     compressionFormat = ConvertAudioCompressionFormatEnum(format),
                     sampleRateSetting = ConvertAudioSampleRateSettingEnum(sampleRateSetting),
