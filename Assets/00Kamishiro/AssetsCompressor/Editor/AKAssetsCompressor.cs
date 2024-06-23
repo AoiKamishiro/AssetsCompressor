@@ -26,11 +26,16 @@
 //LastUpdate:2024/04/20(JST) 
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+
+#if VRC_SDK_VRCSDK3
+using VRC.SDK3.Avatars.ScriptableObjects;
+#endif
 
 public class AKAssetsCompressor : EditorWindow
 {
@@ -43,7 +48,7 @@ public class AKAssetsCompressor : EditorWindow
     }
 
     //GUI Component
-    private const string version = "AssetCompresser V1.3 by 神城葵";
+    private const string version = "AssetCompresser V1.5 by 神城葵";
     private const string linktext = "操作説明等はこちら";
     private const string link = "https://github.com/AoiKamishiro/UnityCustomEditor_AssetsCompressor";
     private int toolberSelection = 0;
@@ -57,7 +62,6 @@ public class AKAssetsCompressor : EditorWindow
     private bool texture_EditClunchCompression = true;
     private bool texture_ShowOPDefault = false;
     private bool texture_ShowOPNoralmap = false;
-    private bool texture_ShowOPUISprite = false;
 
     private Vector2 model_ScrollPosition = Vector2.zero;
     private bool model_ShowOPDirectory = true;
@@ -83,6 +87,7 @@ public class AKAssetsCompressor : EditorWindow
     private int compressionQaulity = 100;
     private bool UseMaxsizeAdjuster = true;
     private bool useNormalmapOp = true;
+    private bool force256toVRCMenuIcon = true;
 
     private bool importCameras = false;
     private bool importLights = false;
@@ -121,10 +126,8 @@ public class AKAssetsCompressor : EditorWindow
     }
     private MAXSIZE defaultMaxsize = MAXSIZE.MaxSize2048x2048;
     private MAXSIZE normalMaxsize = MAXSIZE.MaxSize1024x1024;
-    private MAXSIZE spriteMaxsize = MAXSIZE.MaxSize256x256;
     private int defaultMaxsizeInt = 2048;
     private int normalMaxsizeInt = 1024;
-    private int spriteMaxsizeInt = 256;
 
     //Models Enums
     private enum COMPRESS
@@ -135,7 +138,7 @@ public class AKAssetsCompressor : EditorWindow
         Heigh = 3
     }
     private COMPRESS compression = COMPRESS.Low;
-    private MeshOptimizationFlags optimizationFlags = 0;
+    private MeshOptimizationFlags optimizationFlags = MeshOptimizationFlags.Everything;
 
     //Audios Enums
     private enum FORMAT
@@ -164,6 +167,26 @@ public class AKAssetsCompressor : EditorWindow
     private RATETYPE sampleRateSetting = RATETYPE.OptimizeSampleRate;
     private RATE sampleRate = RATE.SampleRate44100Hz;
 
+    private Type _maMenuItemType;
+    private Type MAMenuItemType
+    {
+        get
+        {
+            if (_maMenuItemType == null)
+            {
+                try
+                {
+                    Assembly macoreAssembly = Assembly.Load("nadena.dev.modular-avatar.core");
+                    _maMenuItemType = macoreAssembly.GetTypes().Where(t => t.IsPublic && t.Name == "ModularAvatarMenuItem").First();
+                }
+                catch
+                {
+                    _maMenuItemType = null;
+                }
+            }
+            return _maMenuItemType;
+        }
+    }
 
     private void OnGUI()
     {
@@ -263,6 +286,14 @@ public class AKAssetsCompressor : EditorWindow
                 {
                     EditorGUI.indentLevel++;
                     defaultMaxsize = (MAXSIZE)EditorGUILayout.EnumPopup("MaxSizeの最大値", defaultMaxsize);
+
+#if !VRC_SDK_VRCSDK3
+                    EditorGUI.BeginDisabledGroup(true);
+#endif
+                    force256toVRCMenuIcon = EditorGUILayout.ToggleLeft("VRC Menu用アイコン画像は256x256に強制", force256toVRCMenuIcon);
+#if !VRC_SDK_VRCSDK3
+                    EditorGUI.EndDisabledGroup();
+#endif
                     EditorGUI.indentLevel--;
                 }
                 texture_ShowOPNoralmap = EditorGUILayout.Foldout(texture_ShowOPNoralmap, "NormalMap Texture");
@@ -271,13 +302,6 @@ public class AKAssetsCompressor : EditorWindow
                     EditorGUI.indentLevel++;
                     normalMaxsize = (MAXSIZE)EditorGUILayout.EnumPopup("MaxSizeの最大値", normalMaxsize);
                     useNormalmapOp = EditorGUILayout.ToggleLeft("MaxSizeを一段階下げる", useNormalmapOp);
-                    EditorGUI.indentLevel--;
-                }
-                texture_ShowOPUISprite = EditorGUILayout.Foldout(texture_ShowOPUISprite, "Sprite Texture");
-                if (texture_ShowOPUISprite)
-                {
-                    EditorGUI.indentLevel++;
-                    spriteMaxsize = (MAXSIZE)EditorGUILayout.EnumPopup("MaxSizeの最大値", spriteMaxsize);
                     EditorGUI.indentLevel--;
                 }
                 EditorGUI.indentLevel--;
@@ -419,7 +443,31 @@ public class AKAssetsCompressor : EditorWindow
         int editedFilesCount = 0;
         defaultMaxsizeInt = ConvertTextMaxsizeEnum(defaultMaxsize);
         normalMaxsizeInt = ConvertTextMaxsizeEnum(normalMaxsize);
-        spriteMaxsizeInt = ConvertTextMaxsizeEnum(spriteMaxsize);
+        IEnumerable<string> iconPaths = Array.Empty<string>();
+
+#if VRC_SDK_VRCSDK3
+        if (force256toVRCMenuIcon)
+        {
+            iconPaths = AssetDatabase.FindAssets($"t:{typeof(VRCExpressionsMenu).Name}")
+                 .Select(x1 => AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(AssetDatabase.GUIDToAssetPath(x1)))
+                 .SelectMany(x2 => x2.controls)
+                 .Select(x3 => x3.icon)
+                 .Where(x4 => x4)
+                 .Select(x5 => AssetDatabase.GetAssetPath(x5));
+
+            if (MAMenuItemType != null)
+            {
+                IEnumerable<string> mamiIcons = AssetDatabase.FindAssets($"t:{typeof(GameObject).Name}")
+                    .Select(x1 => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x1)))
+                    .SelectMany(x2 => x2.GetComponentsInChildren(MAMenuItemType, true))
+                    .Concat(FindObjectsByType(MAMenuItemType, FindObjectsSortMode.None))
+                    .Select(x3 => (Texture2D)new SerializedObject(x3).FindProperty("Control").FindPropertyRelative("icon").objectReferenceValue)
+                    .Where(x4 => x4)
+                    .Select(x5 => AssetDatabase.GetAssetPath(x5));
+                iconPaths = iconPaths.Concat(mamiIcons);
+            }
+        }
+#endif
 
         string[] files = new string[] { };
         for (int i = 0; i < texture_Directories.Length; i++)
@@ -464,16 +512,24 @@ public class AKAssetsCompressor : EditorWindow
 
             TextureImporter Ti = AssetImporter.GetAtPath(files[i]) as TextureImporter;
             if (Ti.textureShape != TextureImporterShape.Texture2D) { continue; }
-            if (Ti.textureType != TextureImporterType.Default && Ti.textureType != TextureImporterType.NormalMap && Ti.textureType != TextureImporterType.Sprite) { continue; }
+            if (Ti.textureType != TextureImporterType.Default && Ti.textureType != TextureImporterType.NormalMap) { continue; }
             if (skipcompresion && Ti.crunchedCompression == true) { continue; }
 
             if (UseMaxsizeAdjuster)
             {
+#if VRC_SDK_VRCSDK3
+                bool force256 = force256toVRCMenuIcon && iconPaths.Contains(files[i]);
+#endif
                 int originalTextureSize = GetOriginalTextureSize(Ti);
                 int compressedTextureSize = AdjustTextureMaxsizeInStage(originalTextureSize, 0);
                 if (Ti.textureType == TextureImporterType.Default)
                 {
-                    if (compressedTextureSize > defaultMaxsizeInt) { compressedTextureSize = defaultMaxsizeInt; }
+#if VRC_SDK_VRCSDK3
+                    if (force256) compressedTextureSize = 256;
+                    else if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
+#else
+                    if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
+#endif
                     if (Ti.maxTextureSize != compressedTextureSize)
                     {
                         Ti.maxTextureSize = compressedTextureSize;
@@ -484,15 +540,6 @@ public class AKAssetsCompressor : EditorWindow
                 {
                     if (useNormalmapOp) { compressedTextureSize = AdjustTextureMaxsizeInStage(originalTextureSize, 1); }
                     if (compressedTextureSize > normalMaxsizeInt) { compressedTextureSize = normalMaxsizeInt; }
-                    if (Ti.maxTextureSize != compressedTextureSize)
-                    {
-                        Ti.maxTextureSize = compressedTextureSize;
-                        maxSizeChanged = true;
-                    }
-                }
-                if (Ti.textureType == TextureImporterType.Sprite)
-                {
-                    if (compressedTextureSize > spriteMaxsizeInt) { compressedTextureSize = spriteMaxsizeInt; }
                     if (Ti.maxTextureSize != compressedTextureSize)
                     {
                         Ti.maxTextureSize = compressedTextureSize;
