@@ -25,6 +25,7 @@
 
 //LastUpdate:2024/04/20(JST) 
 
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,10 +33,6 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
-
-#if VRC_SDK_VRCSDK3
-using VRC.SDK3.Avatars.ScriptableObjects;
-#endif
 
 public class AKAssetsCompressor : EditorWindow
 {
@@ -48,7 +45,7 @@ public class AKAssetsCompressor : EditorWindow
     }
 
     //GUI Component
-    private const string version = "AssetCompresser V1.5 by 神城葵";
+    private const string version = "AssetCompresser V1.6 by 神城葵";
     private const string linktext = "操作説明等はこちら";
     private const string link = "https://github.com/AoiKamishiro/UnityCustomEditor_AssetsCompressor";
     private int toolberSelection = 0;
@@ -187,6 +184,26 @@ public class AKAssetsCompressor : EditorWindow
             return _maMenuItemType;
         }
     }
+    private Type _vrcExpressionsMenuType;
+    private Type VRCExpressionsMenuType
+    {
+        get
+        {
+            if (_vrcExpressionsMenuType == null)
+            {
+                try
+                {
+                    Assembly vrcavatarAssembly = Assembly.Load("VRCSDK3A");
+                    _vrcExpressionsMenuType = vrcavatarAssembly.GetTypes().Where(t => t.IsPublic && t.Name == "VRCExpressionsMenu").First();
+                }
+                catch
+                {
+                    _vrcExpressionsMenuType = null;
+                }
+            }
+            return _vrcExpressionsMenuType;
+        }
+    }
 
     private void OnGUI()
     {
@@ -287,13 +304,10 @@ public class AKAssetsCompressor : EditorWindow
                     EditorGUI.indentLevel++;
                     defaultMaxsize = (MAXSIZE)EditorGUILayout.EnumPopup("MaxSizeの最大値", defaultMaxsize);
 
-#if !VRC_SDK_VRCSDK3
-                    EditorGUI.BeginDisabledGroup(true);
-#endif
+                    EditorGUI.BeginDisabledGroup(VRCExpressionsMenuType == null);
                     force256toVRCMenuIcon = EditorGUILayout.ToggleLeft("VRC Menu用アイコン画像は256x256に強制", force256toVRCMenuIcon);
-#if !VRC_SDK_VRCSDK3
                     EditorGUI.EndDisabledGroup();
-#endif
+
                     EditorGUI.indentLevel--;
                 }
                 texture_ShowOPNoralmap = EditorGUILayout.Foldout(texture_ShowOPNoralmap, "NormalMap Texture");
@@ -445,29 +459,31 @@ public class AKAssetsCompressor : EditorWindow
         normalMaxsizeInt = ConvertTextMaxsizeEnum(normalMaxsize);
         IEnumerable<string> iconPaths = Array.Empty<string>();
 
-#if VRC_SDK_VRCSDK3
-        if (force256toVRCMenuIcon)
+        if (VRCExpressionsMenuType != null)
         {
-            iconPaths = AssetDatabase.FindAssets($"t:{typeof(VRCExpressionsMenu).Name}")
-                 .Select(x1 => AssetDatabase.LoadAssetAtPath<VRCExpressionsMenu>(AssetDatabase.GUIDToAssetPath(x1)))
-                 .SelectMany(x2 => x2.controls)
-                 .Select(x3 => x3.icon)
-                 .Where(x4 => x4)
-                 .Select(x5 => AssetDatabase.GetAssetPath(x5));
-
-            if (MAMenuItemType != null)
+            if (force256toVRCMenuIcon)
             {
-                IEnumerable<string> mamiIcons = AssetDatabase.FindAssets($"t:{typeof(GameObject).Name}")
-                    .Select(x1 => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x1)))
-                    .SelectMany(x2 => x2.GetComponentsInChildren(MAMenuItemType, true))
-                    .Concat(FindObjectsByType(MAMenuItemType, FindObjectsSortMode.None))
-                    .Select(x3 => (Texture2D)new SerializedObject(x3).FindProperty("Control").FindPropertyRelative("icon").objectReferenceValue)
-                    .Where(x4 => x4)
-                    .Select(x5 => AssetDatabase.GetAssetPath(x5));
-                iconPaths = iconPaths.Concat(mamiIcons);
+                iconPaths = AssetDatabase.FindAssets($"t:{VRCExpressionsMenuType.Name}")
+                   .Select(x1 => new SerializedObject(AssetDatabase.LoadAssetAtPath(AssetDatabase.GUIDToAssetPath(x1), VRCExpressionsMenuType)).FindProperty("controls"))
+                   .SelectMany(x2 => Enumerable.Range(0, x2.arraySize).Select(x5 => x2.GetArrayElementAtIndex(x5)))
+                   .Select(x3 => x3.FindPropertyRelative("icon").objectReferenceValue)
+                   .Where(x4 => x4)
+                   .Select(x5 => AssetDatabase.GetAssetPath(x5));
+
+                if (MAMenuItemType != null)
+                {
+                    IEnumerable<string> mamiIcons = AssetDatabase.FindAssets($"t:{typeof(GameObject).Name}")
+                        .Select(x1 => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(x1)))
+                        .SelectMany(x2 => x2.GetComponentsInChildren(MAMenuItemType, true))
+                        .Concat(FindObjectsByType(MAMenuItemType, FindObjectsSortMode.None))
+                        .Select(x3 => (Texture2D)new SerializedObject(x3).FindProperty("Control").FindPropertyRelative("icon").objectReferenceValue)
+                        .Where(x4 => x4)
+                        .Select(x5 => AssetDatabase.GetAssetPath(x5));
+
+                    iconPaths = iconPaths.Concat(mamiIcons);
+                }
             }
         }
-#endif
 
         string[] files = new string[] { };
         for (int i = 0; i < texture_Directories.Length; i++)
@@ -509,6 +525,7 @@ public class AKAssetsCompressor : EditorWindow
             bool crunchComnpressionChanged = false;
             bool compressionQaulityChanged = false;
             bool maxSizeChanged = false;
+            bool force256 = false;
 
             TextureImporter Ti = AssetImporter.GetAtPath(files[i]) as TextureImporter;
             if (Ti.textureShape != TextureImporterShape.Texture2D) { continue; }
@@ -517,19 +534,23 @@ public class AKAssetsCompressor : EditorWindow
 
             if (UseMaxsizeAdjuster)
             {
-#if VRC_SDK_VRCSDK3
-                bool force256 = force256toVRCMenuIcon && iconPaths.Contains(files[i]);
-#endif
+                if (VRCExpressionsMenuType != null)
+                {
+                    force256 = force256toVRCMenuIcon && iconPaths.Contains(files[i]);
+                }
                 int originalTextureSize = GetOriginalTextureSize(Ti);
                 int compressedTextureSize = AdjustTextureMaxsizeInStage(originalTextureSize, 0);
                 if (Ti.textureType == TextureImporterType.Default)
                 {
-#if VRC_SDK_VRCSDK3
-                    if (force256) compressedTextureSize = 256;
-                    else if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
-#else
-                    if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
-#endif
+                    if (VRCExpressionsMenuType != null)
+                    {
+                        if (force256) compressedTextureSize = 256;
+                        else if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
+                    }
+                    else
+                    {
+                        if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
+                    }
                     if (Ti.maxTextureSize != compressedTextureSize)
                     {
                         Ti.maxTextureSize = compressedTextureSize;
