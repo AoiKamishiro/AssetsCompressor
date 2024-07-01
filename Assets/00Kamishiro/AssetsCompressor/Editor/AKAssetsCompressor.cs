@@ -23,9 +23,8 @@
  *     
  */
 
-//LastUpdate:2024/04/20(JST) 
+//LastUpdate:2024/07/01(JST) 
 
-using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -45,7 +44,7 @@ public class AKAssetsCompressor : EditorWindow
     }
 
     //GUI Component
-    private const string version = "AssetCompresser V1.6 by 神城葵";
+    private const string version = "AssetCompresser V1.6.1 by 神城葵";
     private const string linktext = "操作説明等はこちら";
     private const string link = "https://github.com/AoiKamishiro/UnityCustomEditor_AssetsCompressor";
     private int toolberSelection = 0;
@@ -791,147 +790,90 @@ public class AKAssetsCompressor : EditorWindow
     {
         int[] maxsizeList = new int[] { 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
         if (originalSize <= maxsizeList[0])
-        {
             return maxsizeList[DownStage(0, stageDown)];
-        }
         else if (originalSize <= maxsizeList[1])
-        {
             return maxsizeList[DownStage(1, stageDown)];
-        }
         else if (originalSize <= maxsizeList[2])
-        {
             return maxsizeList[DownStage(2, stageDown)];
-        }
         else if (originalSize <= maxsizeList[3])
-        {
             return maxsizeList[DownStage(3, stageDown)];
-        }
         else if (originalSize <= maxsizeList[4])
-        {
             return maxsizeList[DownStage(4, stageDown)];
-        }
         else if (originalSize <= maxsizeList[5])
-        {
             return maxsizeList[DownStage(5, stageDown)];
-        }
         else if (originalSize <= maxsizeList[6])
-        {
             return maxsizeList[DownStage(6, stageDown)];
-        }
         else if (originalSize <= maxsizeList[7])
-        {
             return maxsizeList[DownStage(7, stageDown)];
-        }
         else
-        {
             return maxsizeList[DownStage(8, stageDown)];
-        }
 
-        int DownStage(int a, int b)
+        static int DownStage(int a, int b)
         {
             int x = a - b;
-            if (x >= 0)
-            {
-                return x;
-            }
-            else
-            {
-                return 0;
-            }
+            return x >= 0 ? x : 0;
         }
     }
     private int ConvertTextMaxsizeEnum(MAXSIZE maxsize)
     {
-        switch (maxsize)
+        return maxsize switch
         {
-            case MAXSIZE.MaxSize32x32:
-                return 32;
-            case MAXSIZE.MaxSize64x64:
-                return 64;
-            case MAXSIZE.MaxSize128x128:
-                return 128;
-            case MAXSIZE.MaxSize256x256:
-                return 256;
-            case MAXSIZE.MaxSize512x512:
-                return 512;
-            case MAXSIZE.MaxSize1024x1024:
-                return 1024;
-            case MAXSIZE.MaxSize2048x2048:
-                return 2048;
-            case MAXSIZE.MaxSize4096x4096:
-                return 4096;
-            case MAXSIZE.MaxSize8192x8192:
-                return 8192;
-            default:
-                return 2048;
-        }
+            MAXSIZE.MaxSize32x32 => 32,
+            MAXSIZE.MaxSize64x64 => 64,
+            MAXSIZE.MaxSize128x128 => 128,
+            MAXSIZE.MaxSize256x256 => 256,
+            MAXSIZE.MaxSize512x512 => 512,
+            MAXSIZE.MaxSize1024x1024 => 1024,
+            MAXSIZE.MaxSize2048x2048 => 2048,
+            MAXSIZE.MaxSize4096x4096 => 4096,
+            MAXSIZE.MaxSize8192x8192 => 8192,
+            _ => 2048,
+        };
     }
     private ModelImporterMeshCompression ConvertMeshCompressionEnum(COMPRESS enu)
     {
-        switch (enu)
+        return enu switch
         {
-            case COMPRESS.OFF:
-                return ModelImporterMeshCompression.Off;
-            case COMPRESS.Low:
-                return ModelImporterMeshCompression.Low;
-            case COMPRESS.Medium:
-                return ModelImporterMeshCompression.Medium;
-            case COMPRESS.Heigh:
-                return ModelImporterMeshCompression.High;
-            default:
-                return ModelImporterMeshCompression.Off;
-        }
+            COMPRESS.OFF => ModelImporterMeshCompression.Off,
+            COMPRESS.Low => ModelImporterMeshCompression.Low,
+            COMPRESS.Medium => ModelImporterMeshCompression.Medium,
+            COMPRESS.Heigh => ModelImporterMeshCompression.High,
+            _ => ModelImporterMeshCompression.Off,
+        };
     }
     private AudioCompressionFormat ConvertAudioCompressionFormatEnum(FORMAT enu)
     {
-        switch (enu)
+        return enu switch
         {
-            case FORMAT.ADPCM:
-                return AudioCompressionFormat.ADPCM;
-            case FORMAT.PCM:
-                return AudioCompressionFormat.PCM;
-            case FORMAT.Vorbis:
-                return AudioCompressionFormat.Vorbis;
-            default:
-                return AudioCompressionFormat.Vorbis;
-        }
-
+            FORMAT.ADPCM => AudioCompressionFormat.ADPCM,
+            FORMAT.PCM => AudioCompressionFormat.PCM,
+            FORMAT.Vorbis => AudioCompressionFormat.Vorbis,
+            _ => AudioCompressionFormat.Vorbis,
+        };
     }
     private AudioSampleRateSetting ConvertAudioSampleRateSettingEnum(RATETYPE enu)
     {
-        switch (enu)
+        return enu switch
         {
-            case RATETYPE.OptimizeSampleRate:
-                return AudioSampleRateSetting.OptimizeSampleRate;
-            case RATETYPE.OverrideSampleRate:
-                return AudioSampleRateSetting.OverrideSampleRate;
-            case RATETYPE.PreserveSampleRate:
-                return AudioSampleRateSetting.PreserveSampleRate;
-            default:
-                return AudioSampleRateSetting.OptimizeSampleRate;
-        }
+            RATETYPE.OptimizeSampleRate => AudioSampleRateSetting.OptimizeSampleRate,
+            RATETYPE.OverrideSampleRate => AudioSampleRateSetting.OverrideSampleRate,
+            RATETYPE.PreserveSampleRate => AudioSampleRateSetting.PreserveSampleRate,
+            _ => AudioSampleRateSetting.OptimizeSampleRate,
+        };
     }
     private uint ConvertOverrideSampleRateEnum(RATE enu)
     {
-        switch (enu)
+        return enu switch
         {
-            case RATE.SampleRate11025Hz:
-                return 11025;
-            case RATE.SampleRate192000Hz:
-                return 192000;
-            case RATE.SampleRate22050Hz:
-                return 22050;
-            case RATE.SampleRate44100Hz:
-                return 44100;
-            case RATE.SampleRate48000Hz:
-                return 48000;
-            case RATE.SampleRate8000Hz:
-                return 8000;
-            case RATE.SampleRate96000Hz:
-                return 96000;
-            default:
-                return 44100;
-        }
+            RATE.SampleRate11025Hz => 11025,
+            RATE.SampleRate192000Hz => 192000,
+            RATE.SampleRate22050Hz => 22050,
+            RATE.SampleRate44100Hz => 44100,
+            RATE.SampleRate48000Hz => 48000,
+            RATE.SampleRate8000Hz => 8000,
+            RATE.SampleRate96000Hz => 96000,
+            _ => 44100,
+        };
     }
     private void Complete(int filecount)
     {
