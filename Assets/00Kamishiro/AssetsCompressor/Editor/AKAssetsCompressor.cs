@@ -44,7 +44,7 @@ public class AKAssetsCompressor : EditorWindow
     }
 
     //GUI Component
-    private const string version = "AssetCompresser V1.6.1 by 神城葵";
+    private const string version = "AssetCompresser V1.6.2 by 神城葵";
     private const string linktext = "操作説明等はこちら";
     private const string link = "https://github.com/AoiKamishiro/UnityCustomEditor_AssetsCompressor";
     private int toolberSelection = 0;
