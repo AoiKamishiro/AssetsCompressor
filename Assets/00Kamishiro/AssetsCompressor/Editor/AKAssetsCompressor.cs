@@ -550,7 +550,7 @@ public class AKAssetsCompressor : EditorWindow
                     {
                         if (compressedTextureSize > defaultMaxsizeInt) compressedTextureSize = defaultMaxsizeInt;
                     }
-                    if (Ti.maxTextureSize != compressedTextureSize)
+                    if (Ti.maxTextureSize > compressedTextureSize)
                     {
                         Ti.maxTextureSize = compressedTextureSize;
                         maxSizeChanged = true;
@@ -560,7 +560,7 @@ public class AKAssetsCompressor : EditorWindow
                 {
                     if (useNormalmapOp) { compressedTextureSize = AdjustTextureMaxsizeInStage(originalTextureSize, 1); }
                     if (compressedTextureSize > normalMaxsizeInt) { compressedTextureSize = normalMaxsizeInt; }
-                    if (Ti.maxTextureSize != compressedTextureSize)
+                    if (Ti.maxTextureSize > compressedTextureSize)
                     {
                         Ti.maxTextureSize = compressedTextureSize;
                         maxSizeChanged = true;
